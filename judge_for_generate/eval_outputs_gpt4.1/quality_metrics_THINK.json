@@ -1,0 +1,51 @@
+{
+  "quality_score": 4.667,
+  "composite_score": 4.636,
+  "harmonic_quality_score": 4.703,
+  "weighted_mean": 4.711,
+  "weighted_cv": 0.089,
+  "acceptance_rate": 0.977,
+  "rejection_rate": 0.023,
+  "accepted_mean_quality": 4.744,
+  "total_items": 44,
+  "accepted_count": 43,
+  "rejected_count": 1,
+  "hallucination_count": 0,
+  "hallucination_rate": 0.0,
+  "dimension_stats": {
+    "correctness_reasoning": {
+      "mean": 4.864,
+      "std": 0.409,
+      "cv": 0.084,
+      "min": 3.0,
+      "max": 5.0
+    },
+    "error_diagnosis": {
+      "mean": 4.523,
+      "std": 0.505,
+      "cv": 0.112,
+      "min": 4.0,
+      "max": 5.0
+    },
+    "suggestion_usefulness": {
+      "mean": 4.5,
+      "std": 0.55,
+      "cv": 0.122,
+      "min": 3.0,
+      "max": 5.0
+    },
+    "clarity": {
+      "mean": 4.977,
+      "std": 0.151,
+      "cv": 0.03,
+      "min": 4.0,
+      "max": 5.0
+    }
+  },
+  "weights": {
+    "correctness_reasoning": 0.3,
+    "error_diagnosis": 0.3,
+    "suggestion_usefulness": 0.2,
+    "clarity": 0.2
+  }
+}
