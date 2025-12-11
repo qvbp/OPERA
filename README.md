@@ -3,10 +3,13 @@
 ## Project Structure
 
 - **configs/**: Configuration files for the project
-- **data/THINK/**: Sampled data from the THINK dataset
+- **data/THINK/**: Sampled data from the THINK 
+- **data/MATH_G4-5/**: Sampled data from the THINK dataset
+- **data/MATH_G7/**: Sampled data from the THINK dataset
+- **data/pro_emb/**: Sampled data from the LLM generated
 - **examples/**: Example scripts and usage demonstrations
 - **pykt/**: Model's scripts
-- **get_analysis/**: Scripts to generate option analysis for different datasets (3, 7, 45)
+- **get_analysis/**: Scripts to generate option analysis for different datasets (THINK, MATH_G4-5, MATH_G7)
 - **get_embedding/**: Scripts to generate embeddings for questions
 - **judge_for_generate/**: Automatic evaluation module
   - evaluate_en.py: Evaluator for English dataset
