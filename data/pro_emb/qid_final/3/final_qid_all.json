@@ -1,0 +1,64 @@
+[
+    {
+        "question_id": "04735d6f660bb54ebff122d6f9a657a6000",
+        "option_A": {
+            "text": "Error_Type:[Comprehension Error];Error_Description:[Misinterpreting the question as asking for the number of wholes instead of parts];Suggestion:[Use visual models to clarify the relationship between fractions and wholes]"
+        },
+        "option_B": {
+            "text": "Error_Type:[Concept Confusion];Error_Description:[Mixing up shaded/unshaded regions with total parts in a fraction];Suggestion:[Reinforce the meaning of denominators using unshaded fraction models]"
+        },
+        "option_C": {
+            "text": "Students selecting C correctly understand that the denominator (4) indicates the number of equal parts needed to form the whole, and they can apply this to both numerical and visual contexts."
+        },
+        "question_text": "1 contains ( ) \\frac{1}{4}.\nA. 1\nB. 3\nC. 4"
+    },
+    {
+        "question_id": "96361526e26263bbf90f1b92379f6bd2000",
+        "option_A": {
+            "text": "Error_Type:[Comprehension Error];Error_Description:[Misunderstood the question as asking for the largest two-digit number instead of its product with the smallest two-digit number];Suggestion:[Practice identifying key terms (e.g., 'product') in word problems and restate questions in own words before solving]"
+        },
+        "option_B": {
+            "text": "Correctly identified the largest (99) and smallest (10) two-digit numbers, applied mental multiplication rules (no carry-over), and computed the product accurately."
+        },
+        "option_C": {
+            "text": "Error_Type:[Concept Confusion];Error_Description:[Misidentified the smallest two-digit number as 11 instead of 10, leading to an incorrect product calculation];Suggestion:[Review definitions of two-digit numbers and practice identifying boundary cases (e.g., smallest/largest values)]"
+        },
+        "option_D": {
+            "text": "Error_Type:[Calculation Error];Error_Description:[Incorrectly multiplied 99 × 100 instead of 99 × 10, suggesting a fundamental misunderstanding of multiplying by powers of ten];Suggestion:[Reinforce place-value concepts and practice multiplying by 10/100 using visual aids (e.g., place value charts)]"
+        },
+        "question_text": "The product of the largest two-digit number and the smallest two-digit number is \\underline{}.\nA. 99\nB. 990\nC. 1089\nD. 9900"
+    },
+    {
+        "question_id": "f33870aa58672fda6ecf9032ff829812000",
+        "option_A": {
+            "text": "Error_Type:[Unit Error];Error_Description:[Incorrect conversion between millimeters and decimeters, possibly due to confusion about metric unit scales.];Suggestion:[Practice metric unit conversions systematically and emphasize real-world examples (e.g., rulers, measuring tapes).]"
+        },
+        "option_B": {
+            "text": "Error_Type:[Concept Confusion];Error_Description:[Misunderstanding of real-world measurements for thin objects, conflating banknotes with thicker materials like books.];Suggestion:[Use tactile examples (e.g., measuring a stack of paper) to build intuition for small-scale thickness.]"
+        },
+        "option_C": {
+            "text": "Error_Type:[Calculation Error];Error_Description:[Decimal placement mistake during multiplication (e.g., 100 × 0.9 mm = 90 mm instead of 100 × 0.09 mm = 9 mm).];Suggestion:[Reinforce decimal arithmetic rules and encourage estimation checks (e.g., 'Does 9 cm feel realistic for 100 bills?').]"
+        },
+        "option_D": {
+            "text": "Students correctly applied rational number operations (division and multiplication) with accurate unit interpretation and real-world estimation."
+        },
+        "question_text": "The holiday is coming. Xiaohong's father needs to withdraw 10,000 yuan from the bank. The bank usually gives 100-yuan bills. The total thickness of these bills stacked together is closest to ( ).\nA. 9 decimeters\nB. 9 meters\nC. 9 centimeters\nD. 9 millimeters"
+    },
+    {
+        "question_id": "062ff17781de841f0ce1bea02ce7fd84000",
+        "option_A": {
+            "text": "Error_Type:[Concept Confusion];Error_Description:[Misinterpreting the role of zeros in dividends that are multiples of 100, assuming they directly translate to zeros in the quotient.];Suggestion:[Practice division with multiples of 100 and non-multiples of the divisor to clarify how zeros appear in quotients.]"
+        },
+        "option_B": {
+            "text": "Error_Type:[Method Error];Error_Description:[Incorrectly assuming that a trailing zero in the dividend always results in a zero in the quotient during division.];Suggestion:[Use step-by-step division examples to demonstrate how trailing zeros in the dividend are handled without introducing zeros in the quotient.]"
+        },
+        "option_C": {
+            "text": "Error_Type:[Concept Confusion];Error_Description:[Misunderstanding how zeros in the dividend affect the quotient, assuming a direct correlation without considering the division process.];Suggestion:[Use visual aids to show how division steps combine digits when the current digit is smaller than the divisor.]"
+        },
+        "option_D": {
+            "text": "Students correctly recognize that dividing 417 by 2 requires placing a zero in the tens place when the current digit (1) is smaller than the divisor (2), demonstrating full mastery of the concept."
+        },
+        "question_text": "Calculate the following problems. The quotient that contains 0 is ( ).\nA. 800 \\div 3\nB. 560 \\div 5\nC. 306 \\div 6\nD. 417 \\div 2"
+    },
+    (some examples omitted)......
+]
