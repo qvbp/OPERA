@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import os
+import json
 import numpy as np
 import pandas as pd
 from torch.utils.data import DataLoader
@@ -13,12 +14,23 @@ from sklearn import metrics
 '''
 from torch.nn import Module, Embedding, LSTM, Linear, Dropout, LayerNorm, TransformerEncoder, TransformerEncoderLayer, \
         MultiLabelMarginLoss, MultiLabelSoftMarginLoss, CrossEntropyLoss, BCELoss, MultiheadAttention
-import os
 '''
 关于embedding增强部分的导入
 '''
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# 项目根目录（pykt/models/que_base_model.py -> 上跳 3 级）
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_SEMANTIC_EMB_BASE = os.path.join(_PROJECT_ROOT, "data", "pro_emb", "qid_final")
+
+# 数据集 -> 语义 embedding 子目录名 的映射
+_DATASET_NUM_MAP = {
+    "jiuzhang_grade3_en": "3",
+    "jiuzhang_grade45_cn": "45",
+    "jiuzhang_grade7_cn": "7",
+    "middle_school": "1",
+}
 
 emb_type_list = ["qc_merge","qid","qaid","qcid_merge"]
 emb_type_map = {"akt-iekt":"qc_merge",
@@ -33,7 +45,7 @@ emb_type_map = {"akt-iekt":"qc_merge",
   
 
 class QueEmb(nn.Module):
-    def __init__(self,num_q,num_c,emb_size,model_name,device='cpu',emb_type='qid',emb_path="", pretrain_dim=768, dataset_name='THINK'):
+    def __init__(self,num_q,num_c,emb_size,model_name,device='cpu',emb_type='qid',emb_path="", pretrain_dim=768, dataset_name='jiuzhang_grade3_en'):
         """_summary_
 
         Args:
@@ -62,26 +74,22 @@ class QueEmb(nn.Module):
         
         '''
         embedding 增强部分  2025.1018
+        通过 dataset_name 选择对应的预训练语义 embedding 文件；
+        路径相对项目根目录，无需绑定到具体机器。
         '''
-        # 通过数据集名称判断到底用哪一个文件
         self.dataset_name = dataset_name
-        # print("+"*100)
-        # print(f"dataset_name is {self.dataset_name}")
-        # print("+"*100)
-        num = "3"
-        # print("+" * 100)
-        # print(f"dataset_name is {self.dataset_name}")
-        # print("+" * 100)
-        if self.dataset_name == "THINK":
-            num = "3"
-        elif self.dataset_name == "MATH_G4-5":
-            num = "45"
+        num = _DATASET_NUM_MAP.get(self.dataset_name)
+        if num is None:
+            print(f"[QueEmb] dataset_name={self.dataset_name} 没在 _DATASET_NUM_MAP 中，"
+                  f"将退化为随机 embedding")
+            self.semantic_emb_path = None
+            self.no_q_path = None
         else:
-            num = "7"
-
-        # 加载语义embedding和无语义embedding的问题列表
-        self.semantic_emb_path = f'../data/pro_emb/qid_final/{num}/question_embeddings_overall.npy'
-        self.no_q_path = f'../data/pro_emb/qid_final/{num}/data/no_q.json'
+            self.semantic_emb_path = os.path.join(
+                _SEMANTIC_EMB_BASE, num, "question_embeddings_overall.npy")
+            # 注意：当前项目里并没有 no_q.json，缺失时会自动按"全部用语义"处理
+            self.no_q_path = os.path.join(
+                _SEMANTIC_EMB_BASE, num, "no_q.json")
         self.setup_question_embeddings()
         '''
         embedding 增强部分  2025.1018
@@ -125,89 +133,69 @@ class QueEmb(nn.Module):
     embedding 增强部分  2025.1018
     '''
     def setup_question_embeddings(self):
-        """设置语义embedding和随机embedding"""
-        # 加载无语义embedding的问题id列表
+        """加载语义 embedding（npy），并准备 1024 -> emb_size 的投影层。"""
         if self.no_q_path and os.path.exists(self.no_q_path):
             with open(self.no_q_path, 'r') as f:
                 self.no_semantic_questions = set(json.load(f))
-            print(f"Loaded {len(self.no_semantic_questions)} questions without semantic embeddings")
+            print(f"[QueEmb] Loaded {len(self.no_semantic_questions)} questions without semantic embeddings")
         else:
             self.no_semantic_questions = set()
-            print("No no_q.json file found, using random embeddings for all questions")
-        
-        # 加载预训练的语义embedding
+
         if self.semantic_emb_path and os.path.exists(self.semantic_emb_path):
-            # print("+" * 100)
-            # print(f"semantic_emb_path is {self.semantic_emb_path}")
-            # print("+" * 100)
             semantic_embeddings = np.load(self.semantic_emb_path)
-            print(f"Loaded semantic embeddings with shape: {semantic_embeddings.shape}")
-            
-            # 转换为torch tensor
+            print(f"[QueEmb] Loaded semantic embeddings from {self.semantic_emb_path}, "
+                  f"shape={semantic_embeddings.shape}")
             semantic_embeddings = torch.FloatTensor(semantic_embeddings)
-            
-            # 创建预训练embedding层（可训练）
+
+            # 若语义 embedding 行数 < num_q，需要补齐到 num_q（多出来的题用零向量，
+            # 后续会通过 no_semantic_questions 或 fallback 走随机分支）
+            if semantic_embeddings.shape[0] < self.num_q:
+                pad = torch.zeros(self.num_q - semantic_embeddings.shape[0],
+                                  semantic_embeddings.shape[1])
+                semantic_embeddings = torch.cat([semantic_embeddings, pad], dim=0)
+                print(f"[QueEmb] padded semantic embeddings to {semantic_embeddings.shape}")
+
             self.semantic_emb = Embedding.from_pretrained(semantic_embeddings, freeze=False).to(device)
-            
-            # 如果语义embedding的维度与emb_size不同，添加线性变换
             if semantic_embeddings.shape[1] != self.emb_size:
                 self.semantic_proj = Linear(semantic_embeddings.shape[1], self.emb_size).to(device)
-                print(f"Added projection layer from {semantic_embeddings.shape[1]} to {self.emb_size}")
+                print(f"[QueEmb] Added projection layer from {semantic_embeddings.shape[1]} to {self.emb_size}")
             else:
                 self.semantic_proj = None
         else:
-            # print("+" * 100)
-            # print(f"semantic_emb_path is {self.semantic_emb_path}, semantic_emb_path is not found")
-            # print("+" * 100)
             self.semantic_emb = None
             self.semantic_proj = None
-            print("No semantic embeddings file found, using random embeddings for all questions")
+            print(f"[QueEmb] No semantic embeddings file found at {self.semantic_emb_path}, "
+                  f"使用随机 embedding")
 
     def get_question_embedding(self, q_ids):
-        """根据问题id获取对应的embedding（语义或随机）"""
-        if q_ids.ndim == 1:
-            q_ids = q_ids.unsqueeze(0)
-        batch_size, seq_len = q_ids.shape
-        device = q_ids.device
-        
-        # 初始化输出embedding
-        question_emb = torch.zeros(batch_size, seq_len, self.emb_size, device=device)
-        
-        if self.semantic_emb is not None:
-            # 创建mask来区分有无语义embedding的问题
-            no_semantic_mask = torch.zeros_like(q_ids, dtype=torch.bool)
-            for no_q_id in self.no_semantic_questions:
-                no_semantic_mask |= (q_ids == no_q_id)
-            
-            # 对于有语义embedding的问题
-            semantic_mask = ~no_semantic_mask
-            if semantic_mask.any():
-                semantic_q_ids = q_ids[semantic_mask]
-                semantic_emb = self.semantic_emb(semantic_q_ids)
-                
-                # 如果需要维度变换
-                if self.semantic_proj is not None:
-                    semantic_emb = self.semantic_proj(semantic_emb)
-                
-                question_emb[semantic_mask] = semantic_emb
-            
-            # 对于没有语义embedding的问题，使用随机embedding
-            if no_semantic_mask.any():
-                print("+"*100)
-                print(f"no_semantic_mask is {no_semantic_mask}")
-                print("+"*100)
+        """根据问题id获取对应的embedding（语义或随机），支持任意 shape 的 q_ids。
 
-                no_semantic_q_ids = q_ids[no_semantic_mask]
-                random_emb = self.pro_emb(no_semantic_q_ids)
-                question_emb[no_semantic_mask] = random_emb
-        else:
-            # 如果没有语义embedding文件，全部使用随机embedding
-            print("+" * 100)
-            print("No semantic embeddings file found, using random embeddings for all questions")
-            print("+" * 100)
-            question_emb = self.pro_emb(q_ids)
-        
-        return question_emb
+        返回 shape 与 q_ids 一致，最后追加 emb_size 维。
+        """
+        orig_shape = q_ids.shape
+        flat_q = q_ids.reshape(-1).long()
+
+        # 没有语义 embedding 时，直接走原随机 que_emb
+        if self.semantic_emb is None:
+            out = self.que_emb(flat_q)
+            return out.reshape(*orig_shape, self.emb_size)
+
+        # 查语义 embedding，再投影到 emb_size
+        sem = self.semantic_emb(flat_q)
+        if self.semantic_proj is not None:
+            sem = self.semantic_proj(sem)  # [N, emb_size]
+
+        # 如果有 no_q 列表，则把这些题位置覆盖回随机 embedding
+        if len(self.no_semantic_questions) > 0:
+            random_emb = self.que_emb(flat_q)
+            no_sem_mask = torch.zeros(flat_q.shape[0], dtype=torch.bool, device=flat_q.device)
+            for nq in self.no_semantic_questions:
+                no_sem_mask |= (flat_q == nq)
+            if no_sem_mask.any():
+                sem = sem.clone()
+                sem[no_sem_mask] = random_emb[no_sem_mask]
+
+        return sem.reshape(*orig_shape, self.emb_size)
 
     '''
     embedding 增强部分  2025.1018
@@ -236,16 +224,8 @@ class QueEmb(nn.Module):
         emb_type = self.emb_type
         if "qc_merge" in emb_type:
             concept_avg = self.get_avg_skill_emb(c)#[batch,max_len-1,emb_size]
-            # que_emb = self.que_emb(q)#[batch,max_len-1,emb_size]
-            
-            # 将IEKT的问题embedding变成选项增强
-            # print("+"*100)
-            # print(f"q.shape is {q.shape}")
+            # 使用语义 embedding（若加载成功）；否则自动退化为随机 que_emb
             que_emb = self.get_question_embedding(q)
-            # print("+"*100)
-            if q.ndim == 1:
-                que_emb = que_emb.squeeze(0)
-            # print(f"que_emb shape is {que_emb.shape}")
             que_c_emb = torch.cat([concept_avg,que_emb],dim=-1)#[batch,max_len-1,2*emb_size]
             
         if emb_type == "qaid":
@@ -253,10 +233,8 @@ class QueEmb(nn.Module):
             xemb = self.interaction_emb(x)#[batch,max_len-1,emb_size]
             # print("qid")
         elif emb_type == "qid":
-            xemb = self.que_emb(q)#[batch,max_len-1,emb_size]
-            
-            # 将IEKT的问题embedding变成选项增强
-            # xemb = self.get_question_embedding(q)
+            # 使用语义 embedding（若加载成功）；否则自动退化为随机 que_emb
+            xemb = self.get_question_embedding(q)
             
         elif emb_type == "qaid+qc_merge":
             x = q + self.num_q * r
@@ -291,12 +269,8 @@ class QueEmb(nn.Module):
             return xemb,emb_q,emb_c
         elif emb_type == "iekt":
             emb_c = self.get_avg_skill_emb(c)#[batch,max_len-1,emb_size]
-            
-            # emb_q = self.que_emb(q)#[batch,max_len-1,emb_size]
-            # 将QIKT的问题embedding变成选项增强
-            
+            # 使用语义 embedding（若加载成功）；否则自动退化为随机 que_emb
             emb_q = self.get_question_embedding(q)
-            
             emb_qc = torch.cat([emb_q,emb_c],dim=-1)#[batch,max_len-1,2*emb_size]
             xemb = self.que_c_linear(emb_qc)
             # print(f"emb_qc shape is {emb_qc.shape}")
