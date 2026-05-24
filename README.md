@@ -1,38 +1,41 @@
-# OPERA (WWW 2026)
+# OPERA (CIKM 2026)
+
+OPERA: Option-level Pedagogical Explanation via Reasoning for Augmented Knowledge Tracing
 
 ## Project Structure
 
 - **configs/**: Configuration files for the project
-- **data/THINK/**: Sampled data from the THINK 
-- **data/MATH_G4-5/**: Sampled data from the THINK dataset
-- **data/MATH_G7/**: Sampled data from the THINK dataset
-- **data/pro_emb/**: Sampled data from the LLM generated
+- **data/THINK/**: Full data of the THINK dataset
+- **data/MATH_G4-5/**: Full data of the MATH_G4-5 dataset
+- **data/MATH_G7/**: Full data of the MATH_G7 dataset
+- **data/pro_emb/**: LLM-generated pedagogical explanations and pre-trained semantic embeddings
 - **examples/**: Example scripts and usage demonstrations
-- **pykt/**: Model's scripts
-- **get_analysis/**: Scripts to generate option analysis for different datasets (THINK, MATH_G4-5, MATH_G7)
-- **get_embedding/**: Scripts to generate embeddings for questions
-- **judge_for_generate/**: Automatic evaluation module
-  - evaluate_en.py: Evaluator for English dataset
-  - evaluate_zh.py: Evaluator for Chinese datasets
-  - eval_outputs_gpt4.1/: GPT-4.1 evaluation results
-  - eval_outputs_manual_review/: Manual review results
-  - final_scores.ipynb: Final score aggregation
-
+- **pykt/**: Model implementation scripts
+- **get_analysis/**: Scripts to generate option-level pedagogical analyses for different datasets (THINK, MATH_G4-5, MATH_G7)
+- **get_embedding/**: Scripts to generate semantic embeddings for questions
+- **judge_for_generate/**: Multi-judge quality assurance module
+  - `evaluate_en.py`: Evaluator for English content
+  - `evaluate_zh.py`: Evaluator for Chinese content
+  - `eval_outputs_gpt4.1/`: GPT-4.1 evaluation results
+  - `eval_outputs_manual_review/`: Human expert review results
+  - `final_scores.ipynb`: Final score aggregation
 
 ## Installation
 
+```bash
 conda create --name=opera python=3.8.17
 conda activate opera
 cd opera
 pip install -e .
+```
 
 ## Dataset
-We have open-sourced a portion of the THINK dataset. The full dataset will be released upon paper publication.
-- Location: data/THINK/
-- File: grade_3_data_sampled_2000.xlsx
+
+For full reproducibility, all three datasets (THINK, MATH_G4-5, MATH_G7), together with all LLM-generated pedagogical explanations and pre-trained semantic embeddings, are released in this repository under `data/`.
 
 ### Preprocess
-```
+
+```bash
 cd examples
 python data_preprocess.py --dataset_name=THINK
 ```
@@ -40,14 +43,17 @@ python data_preprocess.py --dataset_name=THINK
 ## OPERA Train & Evaluate
 
 ### Train
-```
-python wandb_xxx_train.py  --dataset_name=THINK
+
+```bash
+python wandb_xxx_train.py --dataset_name=THINK
 ```
 
 ### Evaluate
-```
-python wandb_predict.py  --save_dir="/path-of-previous-trained-model"
+
+```bash
+python wandb_predict.py --save_dir="/path-of-previous-trained-model"
 ```
 
-## Hyper-parameter
-See examples/seedwandb/xxx.yaml
+## Hyper-parameters
+
+See `examples/seedwandb/xxx.yaml`.
